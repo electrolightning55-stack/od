@@ -12,7 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: 'https://animated-system-4jpg7gww6wx42j79q-3000.app.github.dev', // Allow all origins in development
+    origin: 'https://super-xylophone-69xr47gj7p9whqxr-3000.app.github.dev', // Allow all origins in development
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

@@ -49,31 +49,38 @@ export class AuthService {
         throw new NotFoundException('User not found');
       }
 
+      this.logger.log(`[LOGIN DEBUG] User ID: ${user.id}`);
       const role = user.userRoles[0]?.role.roleName || 'user';
+      this.logger.log(`[LOGIN DEBUG] Role: ${role}`);
       const isSuperAdmin = role === 'superAdmin';
-      const organization = user.userOffice[0]?.organization;
-      const organizationId = isSuperAdmin ? undefined : organization?.id;
-
+      let organizationId: string | undefined = undefined;
       let features: string[] = [];
 
       if (isSuperAdmin) {
         const { ALL_FEATURES } = await import('../common/constants/features');
         features = ALL_FEATURES;
-        this.logger.log(`Superadmin ${user.email} granted all features`);
-      } else if (organization) {
-        features = organization.features.map(f => f.feature).filter(Boolean);
-
-        if (features.length === 0) {
-          this.logger.warn(
-            `User ${user.email} organization ${organizationId} has no features`
-          );
-        }
+        this.logger.log(`[LOGIN DEBUG] Superadmin ${user.email} granted all features: ${JSON.stringify(features)}`);
       } else {
-        this.logger.warn(
-          `Non-superadmin user ${user.email} has no organization`
-        );
+        try {
+          // Fetch organization by userId for org admins
+          const org = await this.prisma.organization.findFirst({
+            where: { userId: user.id },
+            include: { features: true }
+          });
+          organizationId = org?.id;
+          this.logger.log(`[LOGIN DEBUG] Queried org for userId ${user.id}: ${JSON.stringify(org)}`);
+          features = org?.features?.map(f => f.feature) || [];
+          this.logger.log(`[LOGIN DEBUG] Extracted features array: ${JSON.stringify(features)}`);
+          if (!org) {
+            this.logger.warn(`[LOGIN DEBUG] Organization not found for userId ${user.id}`);
+          }
+        } catch (err) {
+          this.logger.error(`[LOGIN DEBUG] Prisma org feature query failed for userId ${user.id}:`, err);
+          features = [];
+        }
       }
 
+      this.logger.log(`[LOGIN DEBUG] Returning features: ${JSON.stringify(features)}`);
       return {
         sub: user.id,
         email: user.email,
@@ -154,12 +161,57 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
+      let features: string[] | undefined = undefined;
+      let role: string | undefined = undefined;
+      let isSuperAdmin: boolean = false;
+      let organizationId: string | undefined = undefined;
+      try {
+        role = user.userRoles[0]?.role.roleName || 'user';
+        isSuperAdmin = role === 'superAdmin';
+      } catch (err) {
+        this.logger.error(`Role resolution failed for user ${user.email}:`, err);
+        return {
+          token: '',
+          user: {
+            id: user.id,
+            email: user.email,
+            userName: user.userName,
+            role: undefined,
+            organizationId: undefined,
+            features: [],
+            isSuperAdmin: false
+          }
+        };
+      }
+
+      if (!isSuperAdmin) {
+        try {
+          const organization = user.userOffice[0]?.organization;
+          organizationId = organization?.id;
+          if (!organization) {
+            this.logger.warn(`No organization found for user ${user.email}`);
+            features = [];
+          } else {
+            try {
+              features = organization.features?.map(f => f.feature).filter(Boolean) || [];
+            } catch (featureErr) {
+              this.logger.error(`Feature fetch failed for org ${organizationId}:`, featureErr);
+              features = [];
+            }
+          }
+        } catch (orgErr) {
+          this.logger.error(`Organization lookup failed for user ${user.email}:`, orgErr);
+          features = [];
+        }
+      }
+
       const payload = await this.generateTokenPayload(user.id);
       const token = this.jwtService.sign(payload);
 
       this.logger.log(`Login successful for user: ${user.email}`);
 
-      return {
+      // Response construction
+      const response: AuthResponse = {
         token,
         user: {
           id: user.id,
@@ -167,10 +219,11 @@ export class AuthService {
           userName: user.userName,
           role: payload.role,
           organizationId: payload.organizationId,
-          features: payload.features,
-          isSuperAdmin: payload.isSuperAdmin
+          isSuperAdmin: payload.isSuperAdmin,
+          features: Array.isArray(payload.features) ? payload.features : []
         }
       };
+      return response;
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
         throw error;
