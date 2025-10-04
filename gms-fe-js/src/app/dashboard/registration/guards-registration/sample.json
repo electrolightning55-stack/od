@@ -1,0 +1,48 @@
+{
+    "clientId": "1a9da746-adb8-4db2-86cb-66176b76f68f",
+    "officeId": "bc4b7f18-b028-48cf-af23-858a20af0cb2",
+    "locationName": "BridgeView",
+    "createdLocationId": "655445",
+    "address": "Parkway",
+    "city": "karachi",
+    "provinceState": "sindh",
+    "country": "pakistan",
+    "GPScoordinate": "343434 343434 ",
+    "locationTypeId": "1fd44926-473d-4063-ad24-fb9e289603f1",
+    "authorizedPersonName": "Imran",
+    "authorizedPersonNumber": "34343",
+    "authorizedPersonDesignation": "CEO",
+    "taxes": [],
+    "requestedGuards": [
+        {
+            "guardCategoryId": "4aa837d4-8f20-47dc-992b-3998808d3b69",
+            "shiftId": "521d3607-c27c-4cdd-bf92-5aafaae39fc7",
+            "quantity": 23,
+            "gazettedHoliday": 45,
+            "chargesPerMonth": 23,
+            "overtimePerHour": 1,
+            "allowance": 545,
+            "finances": {
+                "salaryPerMonth": 34,
+                "gazettedHoliday": 34,
+                "overtimePerHour": 34,
+                "allowance": 34
+            }
+        },
+        {
+            "guardCategoryId": "d6fa0734-6db8-454a-bfce-6c2ab2a01ba4",
+            "shiftId": "521d3607-c27c-4cdd-bf92-5aafaae39fc7",
+            "quantity": 435,
+            "gazettedHoliday": 7,
+            "chargesPerMonth": 7,
+            "overtimePerHour": 7,
+            "allowance": 7,
+            "finances": {
+                "salaryPerMonth": 34,
+                "gazettedHoliday": 34,
+                "overtimePerHour": 34,
+                "allowance": 34
+            }
+        }
+    ]
+}

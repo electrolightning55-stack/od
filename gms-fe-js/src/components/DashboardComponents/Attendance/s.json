@@ -1,0 +1,67 @@
+{
+  "data": {
+    "status": "success",
+    "message": "Request successful",
+    "data": {
+      "success": false,
+      "errors": [
+        {
+          "row": 1,
+          "errors": [
+            {
+              "property": "dateOfBirth",
+              "constraints": {
+                "isDateString": "dateOfBirth must be a valid ISO 8601 date string"
+              }
+            },
+            {
+              "property": "cnicIssueDate",
+              "constraints": {
+                "isDateString": "cnicIssueDate must be a valid ISO 8601 date string"
+              }
+            },
+            {
+              "property": "cnicExpiryDate",
+              "constraints": {
+                "isDateString": "cnicExpiryDate must be a valid ISO 8601 date string"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "status": 201,
+  "statusText": "Created",
+  "headers": {
+    "content-length": "445",
+    "content-type": "application/json; charset=utf-8"
+  },
+  "config": {
+    "transitional": {
+      "silentJSONParsing": true,
+      "forcedJSONParsing": true,
+      "clarifyTimeoutError": false
+    },
+    "adapter": ["xhr", "http", "fetch"],
+    "transformRequest": [null],
+    "transformResponse": [null],
+    "timeout": 0,
+    "xsrfCookieName": "XSRF-TOKEN",
+    "xsrfHeaderName": "X-XSRF-TOKEN",
+    "maxContentLength": -1,
+    "maxBodyLength": -1,
+    "env": {},
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "multipart/form-data",
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMmUyNDY2YS03NTgwLTQ4ODgtYTI0OS1mYjE5ZDlkMzYzNWQiLCJlbWFpbCI6Im1hcmxib3Jvc2VjdXJpdHlAZ21haWwuY29tIiwicm9sZUlkIjoiMDQwZmZlNjEtMjJmYi00YTFhLTkwYTMtODllNmU3NTYxNzMxIiwib3JnYW5pemF0aW9uSWQiOiIyOWU3NDBkOS1kMjQzLTQ2ZjItOGEyYS1jOGI2MjIyZDVkYmIiLCJpYXQiOjE3NTUwODA1NDIsImV4cCI6MTc1NTE2Njk0Mn0.DFQ3dDbmBr38KG_kbg-I7_w_tywRpH_wIvT-C0cxnjs"
+    },
+    "baseURL": "https://api.guardsos.com",
+    "method": "post",
+    "url": "/file/upload/guards",
+    "data": {},
+    "allowAbsoluteUrls": true
+  },
+  "request": {}
+}

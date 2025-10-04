@@ -1,0 +1,40 @@
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Deploy on API Server
+          runs-on:
+            - self.hosted
+            - linux.shell
+          working_directory: /home/ubuntu/gms-be
+          script:
+            - echo "🚀 Starting deployment..."
+
+            - echo "🔑 Setting permissions..."
+            - sudo chown -R ubuntu:ubuntu /home/ubuntu/gms-be
+            - cd /home/ubuntu/gms-be
+            - cp .env ../
+            - echo "🛑 Stopping old PM2 process..."
+            - sudo pm2 stop gms-be || true
+            - sudo pm2 delete gms-be || true
+
+            - echo "🔄 Updating code..."
+            - git clean -fdx
+            - git fetch --all
+            - git reset --hard origin/main
+
+            - echo "🧹 Cleaning dependencies & Prisma..."
+            - npm cache clean --force
+            - cp /home/ubuntu/.env /home/ubuntu/gms-be
+
+            - echo "📦 Installing dependencies..."
+            - npm install
+  
+            - echo "🏗️ Building project..."
+            - npm run build
+            - npx prisma generate
+            - sleep 20
+            - echo "🚀 Starting PM2..."
+            - sudo pm2 start dist/src/main.js --name gms-be
+
+            - echo "✅ Deployment completed!"

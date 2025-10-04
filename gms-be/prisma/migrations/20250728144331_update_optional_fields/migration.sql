@@ -1,0 +1,9 @@
+-- DropIndex
+DROP INDEX "Client_POCEmail_key";
+
+-- AlterTable
+ALTER TABLE "Client" ALTER COLUMN "POCName" DROP NOT NULL,
+ALTER COLUMN "POCDesignation" DROP NOT NULL,
+ALTER COLUMN "POCEmail" DROP NOT NULL,
+ALTER COLUMN "POCContact" DROP NOT NULL,
+ALTER COLUMN "AlternateContactPerson" DROP NOT NULL;

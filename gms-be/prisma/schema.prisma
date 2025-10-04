@@ -1,0 +1,608 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  isActive      Boolean       @default(true)
+  email         String        @unique
+  password      String
+  userName      String
+  profileImage  String?
+  id            String        @id @default(uuid()) @db.Uuid
+  employees     Employee[]
+  organizations Organization? @relation("UserOrganization")
+  userOffice    UserOffice[]
+  userRoles     UserRole[]    @relation("UserUserRoles")
+}
+
+model Role {
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  isActive  Boolean    @default(true)
+  roleName  String
+  id        String     @id @default(uuid()) @db.Uuid
+  userRoles UserRole[] @relation("RoleUserRoles")
+}
+
+model UserRole {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  role   Role   @relation("RoleUserRoles", fields: [roleId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserUserRoles", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model Organization {
+  id               String                    @id @default(uuid()) @db.Uuid
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  isActive         Boolean                   @default(true)
+  organizationName String
+  userId           String                    @unique @db.Uuid
+  organizationLogo String?
+  addressLine1     String
+  addressLine2     String?
+  city             String
+  email            String                    @unique
+  phoneNumber1     String
+  phoneNumber2     String?
+  province         String
+  client           Client[]
+  employee         Employee[]
+  guard            Guard[]
+  guardCategories  GuardCategory[]
+  office           Office[]
+  features         OrganizationFeature[]
+  user             User                      @relation("UserOrganization", fields: [userId], references: [id], onDelete: Cascade)
+  bankAccount      OrganizationBankAccount[]
+  userOffice       UserOffice[]
+}
+
+model OrganizationFeature {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  feature        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, feature])
+}
+
+model Office {
+  id               String       @id @default(uuid()) @db.Uuid
+  organizationId   String       @db.Uuid
+  province         String
+  contactNumber    String
+  email            String
+  address          String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  isActive         Boolean      @default(true)
+  addressOpt       String?
+  city             String       @default("N/A")
+  branchName       String       @default("N/A")
+  contactNumberOpt String?
+  branchCode       Int          @default(autoincrement())
+  guard            Guard[]
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userOffice       UserOffice[]
+  location         Location[]
+}
+
+model OrganizationBankAccount {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  bankName       String?
+  bankCode       String?
+  accountNumber  String?
+  accountTitle   String?
+  IBAN           String?
+  branchCode     String?
+  branch         String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model UserOffice {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @db.Uuid
+  organizationId String       @db.Uuid
+  officeId       String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  office         Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId, officeId])
+}
+
+model GuardCategory {
+  id             String           @id @default(uuid()) @db.Uuid
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  categoryName   String
+  organizationId String           @db.Uuid
+  assignedGuard  AssignedGuard[]
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedGuard RequestedGuard[]
+}
+
+model Employee {
+  id                 String               @id @default(uuid()) @db.Uuid
+  userId             String?              @db.Uuid
+  organizationId     String               @db.Uuid
+  registrationDate   DateTime?
+  fullName           String
+  fatherName         String?
+  dateOfBirth        DateTime?
+  cnicNumber         String               @unique
+  cnicIssueDate      DateTime
+  currentAddress     String?
+  permanentAddress   String?
+  weight             Float?
+  height             Float
+  religion           String?
+  bloodGroup         String?
+  bloodPressure      String?
+  heartBeat          String?
+  eyeColor           String?
+  disability         String?
+  eobiNumber         String?
+  sessiNumber        String?
+  kinName            String?
+  kinFatherName      String?
+  kinCNIC            String?
+  serviceNumber      Int
+  cnicExpiryDate     DateTime
+  contactNumber      String               @default("N/A")
+  kinContactNumber   String?              @default("N/A")
+  religionSect       String?              @default("N/A")
+  kinRelation        String?              @default("N/A")
+  createdAt          DateTime             @default(now())
+  isActive           Boolean              @default(true)
+  updatedAt          DateTime             @default(now()) @updatedAt
+  academic           Academic?
+  assignedSupervisor AssignedSupervisor[]
+  bankAccount        BankAccount?
+  biometric          Biometric?
+  drivingLicense     DrivingLicense?
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user               User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeDocuments  EmployeeDocuments?
+  employeeExperience EmployeeExperience[]
+  references         Reference[]
+}
+
+model Guard {
+  id                         String               @id @default(uuid()) @db.Uuid
+  organizationId             String               @db.Uuid
+  registrationDate           DateTime?            @default(now())
+  fullName                   String
+  fatherName                 String?
+  dateOfBirth                DateTime?
+  cnicNumber                 String               @unique
+  cnicIssueDate              DateTime
+  currentAddress             String?
+  permanentAddress           String?
+  weight                     Float?
+  height                     Float
+  religion                   String?
+  bloodGroup                 String?
+  bloodPressure              String?
+  heartBeat                  String?
+  eyeColor                   String?
+  disability                 String?
+  eobiNumber                 String?
+  sessiNumber                String?
+  kinName                    String?
+  kinFatherName              String?
+  kinCNIC                    String?
+  serviceNumber              Int
+  cnicExpiryDate             DateTime?
+  contactNumber              String               @default("N/A")
+  currentAreaPoliceContact   String?              @default("N/A")
+  currentAreaPoliceStation   String?              @default("N/A")
+  kinRelation                String               @default("N/A")
+  permanentAreaPoliceContact String?              @default("N/A")
+  permanentAreaPoliceStation String?              @default("N/A")
+  religionSect               String?              @default("N/A")
+  kinContactNumber           String?              @default("N/A")
+  officeId                   String?              @db.Uuid
+  createdAt                  DateTime             @default(now())
+  isActive                   Boolean              @default(true)
+  updatedAt                  DateTime             @default(now()) @updatedAt
+  academic                   Academic?
+  assignedGuard              AssignedGuard[]
+  assignedSupervisors        AssignedSupervisor[]
+  bankAccount                BankAccount?
+  biometric                  Biometric?
+  drivingLicense             DrivingLicense?
+  office                     Office?              @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  organization               Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  guardAllowances            GuardAllowances[]
+  guardDeductions            GuardDeductions[]
+  guardDocuments             GuardDocuments?
+  guardExperience            GuardExperience[]
+  guardsAttendance           GuardsAttendance[]
+  references                 Reference[]
+}
+
+model Academic {
+  id                String    @id @default(uuid()) @db.Uuid
+  employeeId        String?   @unique @db.Uuid
+  lastEducation     String?
+  institute         String?
+  hasDrivingLicense Boolean?
+  guardId           String?   @unique @db.Uuid
+  employee          Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard             Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model DrivingLicense {
+  id                       String    @id @default(uuid()) @db.Uuid
+  employeeId               String?   @unique @db.Uuid
+  drivingLicenseNo         String?
+  drivingLicenseIssueDate  DateTime?
+  drivingLicenseExpiryDate DateTime?
+  licenseIssueCity         String?
+  guardId                  String?   @unique @db.Uuid
+  employee                 Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard                    Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model GuardExperience {
+  id                       String  @id @default(uuid()) @db.Uuid
+  guardId                  String? @db.Uuid
+  isExServiceMen           Boolean
+  exServiceDischargeNumber String?
+  armyNumber               String?
+  branch                   String?
+  serviceYears             Int?
+  serviceMonths            Int?
+  securityYears            Int?
+  place                    String?
+  unit                     String?
+  recentCivilEmployment    String?
+  rankName                 String?
+  guard                    Guard?  @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model EmployeeExperience {
+  id                    String    @id @default(uuid()) @db.Uuid
+  employeeId            String?   @db.Uuid
+  recentCivilEmployment String?
+  placeOfDuty           String?
+  totalYears            Int?
+  employee              Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Reference {
+  id               String    @id @default(uuid()) @db.Uuid
+  employeeId       String?   @db.Uuid
+  fullName         String
+  fatherName       String?
+  cnicNumber       String
+  contactNumber    String?
+  relationship     String?
+  currentAddress   String?
+  permanentAddress String?
+  guardId          String?   @db.Uuid
+  cnicBack         String?   @default("N/A")
+  cnicFront        String?   @default("N/A")
+  employee         Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard            Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model BankAccount {
+  id            String    @id @default(uuid()) @db.Uuid
+  employeeId    String?   @unique @db.Uuid
+  bankName      String?
+  bankCode      String?
+  accountNumber String?
+  IBAN          String?
+  branchCode    String?
+  branch        String?
+  guardId       String?   @unique @db.Uuid
+  accountTitle  String?
+  employee      Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard         Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model EmployeeDocuments {
+  id           String   @id @default(uuid()) @db.Uuid
+  employeeId   String   @unique @db.Uuid
+  picture      String
+  cnicFront    String
+  cnicBack     String
+  licenseFront String?
+  licenseBack  String?
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model GuardDocuments {
+  id                        String  @id @default(uuid()) @db.Uuid
+  guardId                   String? @unique @db.Uuid
+  picture                   String
+  cnicFront                 String
+  cnicBack                  String
+  licenseFront              String?
+  licenseBack               String?
+  policeVerification        String?
+  specialBranchVerification String?
+  dischargeBook             String?
+  NadraVeriSys              String?
+  NadraVeriSysRef1          String?
+  NadraVeriSysRef2          String?
+  healthCertificate         String?
+  medicalDocument           String?
+  DDCDriving                String?
+  educationCertificate      String?
+  APSAATrainingCertificate  String?
+  misc1                     String?
+  misc2                     String?
+  originalCNICSubmitted     Boolean @default(false)
+  guard                     Guard?  @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model Biometric {
+  id                String    @id @default(uuid()) @db.Uuid
+  employeeId        String?   @unique @db.Uuid
+  rightThumb        String?
+  rightMiddleFinger String?
+  rightLittleFinger String?
+  leftThumb         String?
+  leftMiddleFinger  String?
+  leftLittleFinger  String?
+  rightForeFinger   String?
+  rightRingFinger   String?
+  rightFourFinger   String?
+  leftFourFinger    String?
+  leftRingFinger    String?
+  guardId           String?   @unique @db.Uuid
+  leftForeFinger    String    @default("Left Fore Finger")
+  employee          Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard             Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id                     String               @id @default(uuid()) @db.Uuid
+  organizationId         String               @db.Uuid
+  recruitmentDate        DateTime
+  companyName            String
+  industry               String
+  websiteLink            String
+  address                String
+  city                   String
+  state                  String
+  country                String
+  currentAddress         String
+  contactNumber          String
+  officialEmail          String               @unique
+  POCName                String?
+  POCDesignation         String?
+  POCEmail               String?
+  POCContact             String?
+  AlternateContactPerson String?
+  AlternateContactNumber String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  isActive               Boolean              @default(true)
+  contractFile           String?              @default("N/A")
+  contractNumber         Int                  @default(autoincrement())
+  assignedSupervisors    AssignedSupervisor[]
+  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location               Location[]
+}
+
+model Shift {
+  id               String             @id @default(uuid()) @db.Uuid
+  shiftName        String
+  guardsAttendance GuardsAttendance[]
+  requestedGuards  RequestedGuard[]
+
+  @@map("shifts")
+}
+
+model locationType {
+  id        String     @id @default(uuid()) @db.Uuid
+  type      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  isActive  Boolean    @default(true)
+  locations Location[]
+
+  @@map("location_types")
+}
+
+model Location {
+  id                          String                    @id @default(uuid()) @db.Uuid
+  organizationId              String                    @db.Uuid
+  clientId                    String                    @db.Uuid
+  locationName                String
+  address                     String
+  city                        String
+  provinceState               String
+  country                     String
+  GPScoordinate               String?
+  authorizedPersonName        String?
+  authorizedPersonNumber      String?
+  authorizedPersonDesignation String?
+  createdAt                   DateTime                  @default(now())
+  createdLocationId           String
+  isActive                    Boolean                   @default(true)
+  locationTypeId              String?                   @db.Uuid
+  updatedAt                   DateTime                  @updatedAt
+  officeId                    String?                   @db.Uuid
+  assignedGuard               AssignedGuard[]
+  assignedSupervisor          AssignedSupervisor[]
+  guardDeductions             GuardDeductions[]
+  guardsAttendance            GuardsAttendance[]
+  payRollDuration             LocationPayRollDuration[]
+  taxes                       LocationTaxes[]
+  client                      Client                    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  locationType                locationType?             @relation(fields: [locationTypeId], references: [id], onDelete: Cascade)
+  office                      Office?                   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  requestedGuards             RequestedGuard[]
+
+  @@map("locations")
+}
+
+model RequestedGuard {
+  id              String                 @id @default(uuid()) @db.Uuid
+  locationId      String                 @db.Uuid
+  guardCategoryId String                 @db.Uuid
+  quantity        Int
+  shiftId         String                 @db.Uuid
+  allowance       Float
+  chargesPerMonth Float
+  overtimePerHour Float
+  gazettedHoliday Int?
+  assignedGuard   AssignedGuard[]
+  guardAllowances GuardAllowances[]
+  finances        RequestedGuardFinance?
+  guardCategory   GuardCategory          @relation(fields: [guardCategoryId], references: [id], onDelete: Cascade)
+  location        Location               @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  Shift           Shift                  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@map("requested_guards")
+}
+
+model RequestedGuardFinance {
+  id               String         @id @default(uuid()) @db.Uuid
+  requestedGuardId String         @unique @db.Uuid
+  salaryPerMonth   Float
+  allowance        Float
+  overtimePerHour  Float
+  gazettedHoliday  Int?
+  requestedGuard   RequestedGuard @relation(fields: [requestedGuardId], references: [id], onDelete: Cascade)
+
+  @@map("requested_guard_finances")
+}
+
+model LocationTaxes {
+  id         String   @id @default(uuid()) @db.Uuid
+  locationId String   @db.Uuid
+  taxType    String
+  percentage Float?
+  amount     Float?
+  addInvoice Boolean
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+model AssignedGuard {
+  id               String         @id @default(uuid()) @db.Uuid
+  guardId          String         @db.Uuid
+  locationId       String         @db.Uuid
+  requestedGuardId String         @db.Uuid
+  deploymentDate   DateTime
+  deploymentTill   DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  guardCategoryId  String         @db.Uuid
+  guardCategory    GuardCategory  @relation(fields: [guardCategoryId], references: [id], onDelete: Cascade)
+  guard            Guard          @relation(fields: [guardId], references: [id], onDelete: Cascade)
+  location         Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  requestedGuard   RequestedGuard @relation(fields: [requestedGuardId], references: [id], onDelete: Cascade)
+}
+
+model AssignedSupervisor {
+  id             String    @id @default(uuid()) @db.Uuid
+  locationId     String    @db.Uuid
+  employeeId     String?   @db.Uuid
+  clientId       String    @db.Uuid
+  deploymentDate DateTime
+  deploymentTill DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  guardId        String?   @db.Uuid
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  employee       Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  guard          Guard?    @relation(fields: [guardId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  location       Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+model GuardsAttendance {
+  id         String         @id @default(uuid()) @db.Uuid
+  type       AttendanceType
+  locationId String         @db.Uuid
+  guardId    String         @db.Uuid
+  shiftId    String         @db.Uuid
+  date       DateTime
+  isHoliday  Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  guard      Guard          @relation(fields: [guardId], references: [id], onDelete: Cascade)
+  location   Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  shift      Shift          @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+}
+
+model GuardAllowances {
+  id                        String                  @id @default(uuid()) @db.Uuid
+  guardId                   String                  @db.Uuid
+  allowancePercentage       Float
+  holidayCount              Int
+  overTimeCount             Int
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  isActive                  Boolean                 @default(true)
+  requestedGuardId          String                  @db.Uuid
+  locationPayrollDurationId String                  @db.Uuid
+  guard                     Guard                   @relation(fields: [guardId], references: [id], onDelete: Cascade)
+  duration                  LocationPayRollDuration @relation(fields: [locationPayrollDurationId], references: [id], onDelete: Cascade)
+  requestedGuard            RequestedGuard          @relation(fields: [requestedGuardId], references: [id], onDelete: Cascade)
+}
+
+model LocationPayRollDuration {
+  id              String            @id @default(uuid()) @db.Uuid
+  locationId      String            @db.Uuid
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Int
+  isLocked        Boolean           @default(true)
+  nextUnlockTime  DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  guardAllowances GuardAllowances[]
+  location        Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+model GuardDeductions {
+  id            String        @id @default(uuid()) @db.Uuid
+  guardId       String        @db.Uuid
+  deductionType DeductionType
+  amount        Float
+  date          DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  locationId    String        @db.Uuid
+  guard         Guard         @relation(fields: [guardId], references: [id], onDelete: Cascade)
+  location      Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+enum AttendanceType {
+  P
+  A
+  R
+  L
+}
+
+enum DeductionType {
+  sessiPessiFund
+  eobiFund
+  insurance
+  advances
+  loanRepayment
+  penalty
+  miscCharges
+}
