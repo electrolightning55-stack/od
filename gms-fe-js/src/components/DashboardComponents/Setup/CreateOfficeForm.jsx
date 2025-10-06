@@ -51,19 +51,18 @@ const CreateOfficeForm = () => {
                 contactNumber: values.contactNo
             }
 
-            const res = await userRequest.post("/organizations/add-office", addOfficePayload);
-
-            console.log(res.data);
-
-            toast.success("Office Created Successfully")
+            console.log("Submitting office payload:", addOfficePayload);
+            const res = await userRequest.post("/organizations/offices", addOfficePayload);
+            console.log("Add office response:", res.data);
+            toast.success("Office Created Successfully");
             setTimeout(() => {
                 setSubmitting(false);
                 resetForm();
             }, 1000);
         } catch (error) {
-            console.log(error);
-            const errMessage = error?.response?.data?.message;
-            toast.error(errMessage)
+            console.error("Add office error:", error);
+            const errMessage = error?.response?.data?.message || error.message || "Unknown error";
+            toast.error(`Failed to create office: ${errMessage}`);
         }
 
 

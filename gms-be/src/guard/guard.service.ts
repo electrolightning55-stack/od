@@ -11,7 +11,18 @@ import { AssignGuardDto } from './dto/assigned-guard-dto';
 
 @Injectable()
 export class GuardService {
-  constructor(  private readonly fileService: FileService , private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly fileService: FileService,
+    private readonly prisma: PrismaService
+  ) {}
+
+  async findByOrganization(organizationId: string) {
+    console.log('[GuardService] Finding guards for organization:', organizationId);
+    return this.prisma.guard.findMany({
+      where: { organizationId },
+      include: { organization: true }
+    });
+  }
 
   async bulkUploadGuards(organizationId: string, officeId: string, guards: any[]) {
     if (!Array.isArray(guards) || guards.length === 0) {

@@ -22,6 +22,22 @@ import { UpdateAssignSupervisorDto } from './dto/update-assign-supervisor.dto';
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
+  @Get('by-organization')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.organizationAdmin)
+  @ResponseMessage('Employees fetched successfully')
+  async getByOrganization(
+    @GetOrganizationId() organizationId: string,
+  ) {
+    console.log('[EmployeeController] Getting employees by organization:', organizationId);
+    const employees = await this.employeeService.findByOrganization(organizationId);
+    return {
+      success: true,
+      data: employees,
+      message: 'Employees fetched successfully'
+    };
+  }
+
   @Post()
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard, RolesGuard)

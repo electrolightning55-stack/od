@@ -110,12 +110,22 @@ export class OrganizationController {
     @Body() dto: CreateOfficeDto,
     @GetOrganizationId() organizationId: string,
   ): Promise<BaseResponseDto<any>> {
-    const serviceResult = await this.organizationService.addOffice(dto, organizationId);
-    return {
-      success: true,
-      data: serviceResult,
-      message: 'Office created successfully'
-    };
+    console.log("Add office route hit", { organizationId, payload: dto });
+    try {
+      const serviceResult = await this.organizationService.addOffice(dto, organizationId);
+      return {
+        success: true,
+        data: serviceResult,
+        message: 'Office created successfully'
+      };
+    } catch (error) {
+      console.error("Error in addOffice controller:", error);
+      return {
+        success: false,
+        data: null,
+        message: error?.message || 'Failed to create office'
+      };
+    }
   }
 
   @Post('bank-accounts')
@@ -134,11 +144,17 @@ export class OrganizationController {
   }
 
   @Get('offices')
+  @Get('get-offices') // Add alias for frontend compatibility
   @Roles(RolesEnum.organizationAdmin)
   @ResponseMessage('Offices fetched successfully')
   async getOffices(
     @GetOrganizationId() organizationId: string,
   ): Promise<BaseResponseDto<any>> {
+    console.log('[OrganizationController] Getting offices', {
+      organizationId,
+      endpoint: 'GET /organizations/offices',
+      role: RolesEnum.organizationAdmin
+    });
     const serviceResult = await this.organizationService.getOffices(organizationId);
     return {
       success: true,

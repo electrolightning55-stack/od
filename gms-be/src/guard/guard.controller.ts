@@ -1,5 +1,4 @@
 
-  // ...existing code...
 import {
     Controller, Get, Post, Body, Patch, Param, Delete,
     UseGuards,
@@ -23,6 +22,22 @@ import { RolesEnum } from 'src/common/enums/roles-enum';
 @Controller('guards')
 export class GuardController {
   constructor(private readonly guardService: GuardService) {}
+
+  @Get('by-organization')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.organizationAdmin)
+  @ResponseMessage('Guards fetched successfully')
+  async getByOrganization(
+    @GetOrganizationId() organizationId: string,
+  ) {
+    console.log('[GuardController] Getting guards by organization:', organizationId);
+    const guards = await this.guardService.findByOrganization(organizationId);
+    return {
+      success: true,
+      data: guards,
+      message: 'Guards fetched successfully'
+    };
+  }
 
   @Post('bulk-upload')
   @ApiBearerAuth('jwt')

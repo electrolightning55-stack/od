@@ -163,9 +163,13 @@ const CreateUserForm = () => {
         }
     };
 
-    const handleSubmit = async (values, { resetForm }) => {
+    const handleSubmit = async (values, { resetForm, setErrors }) => {
         try {
             setIsLoading(true);
+            console.log('Creating user with values:', { 
+                ...values,
+                password: '[REDACTED]'
+            });
 
             const createUserPayload = {
                 employeeId: values.employeeId,
@@ -184,7 +188,21 @@ const CreateUserForm = () => {
                 if (fileInputRef.current) fileInputRef.current.value = '';
             }
         } catch (error) {
-            console.error('Error creating user:', error);
+            console.error('Error creating user:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+
+            // Handle validation errors
+            if (error.response?.data?.errors) {
+                const validationErrors = {};
+                error.response.data.errors.forEach(err => {
+                    validationErrors[err.field] = err.message;
+                });
+                setErrors(validationErrors);
+            }
+
             const errorMessage = error.response?.data?.message || 'Error creating user. Please try again.';
             toast.error(errorMessage);
         } finally {

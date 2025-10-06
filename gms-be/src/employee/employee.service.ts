@@ -12,8 +12,18 @@ import { UpdateAssignSupervisorDto } from './dto/update-assign-supervisor.dto';
 
 @Injectable()
 export class EmployeeService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly user: UserService
+  ) {}
 
-  constructor(private readonly prisma: PrismaService, private readonly user: UserService) {}
+  async findByOrganization(organizationId: string) {
+    console.log('[EmployeeService] Finding employees for organization:', organizationId);
+    return this.prisma.employee.findMany({
+      where: { organizationId },
+      include: { organization: true }
+    });
+  }
 
   async create(data: CreateEmployeeDto, organizationId: string) {
     try {

@@ -64,11 +64,18 @@ export class UserService {
     organizationId: string,
   ) {
     try {
+      console.log('[UserService] Creating employee user:', {
+        email: data.email,
+        employeeId: data.employeeId,
+        organizationId
+      });
       // Check duplicate email
+      console.log('[UserService] Checking for existing email:', data.email);
       const existingEmail = await this.prisma.user.findUnique({
         where: { email: data.email },
       });
       if (existingEmail) {
+        console.error('[UserService] Email already exists:', data.email);
         throw new ConflictException('A user with this email already exists');
       }
 

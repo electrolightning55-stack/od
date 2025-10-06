@@ -12,6 +12,7 @@ import { CreateOfficeDto } from './dto/create-office-dto';
 import { CreateOrganizationBankAccountDto } from './dto/create-bank-account.dto';
 import { generateRandomNumber } from 'src/common/utils/random-num-generator';
 import { RolesEnum } from 'src/common/enums/roles-enum';
+import { OrganizationFeatures } from 'src/common/constants/features';
 
 @Injectable()
 export class OrganizationService {
@@ -79,6 +80,12 @@ export class OrganizationService {
           }
         });
 
+        // Ensure Setup feature is included
+        let features = [...dto.features];
+        if (!features.includes(OrganizationFeatures.SETUP)) {
+          features.push(OrganizationFeatures.SETUP);
+        }
+
         // 3. Create organization with its own features
         const organization = await prisma.organization.create({
           data: {
@@ -93,7 +100,7 @@ export class OrganizationService {
             userId: newUser.id,
             isActive: true,
             features: {
-              create: dto.features.map(f => ({ feature: f }))
+              create: features.map(f => ({ feature: f }))
             }
           },
           include: {
@@ -168,16 +175,21 @@ export class OrganizationService {
 
   // Add Office
   async addOffice(dto: CreateOfficeDto, organizationId: string) {
-    if (!organizationId) throw new NotFoundException('Organization ID missing');
-
-    const org = await this.prisma.organization.findUnique({ where: { id: organizationId } });
-    if (!org) throw new NotFoundException("Organization doesn't exist");
-
-    const branchCode = generateRandomNumber(4);
-    return this.prisma.office.create({
-      data: { ...dto, organizationId, branchCode },
-      include: { organization: true },
-    });
+    try {
+      if (!organizationId) throw new NotFoundException('Organization ID missing');
+      const org = await this.prisma.organization.findUnique({ where: { id: organizationId } });
+      if (!org) throw new NotFoundException("Organization doesn't exist");
+      const branchCode = generateRandomNumber(4);
+      const result = await this.prisma.office.create({
+        data: { ...dto, organizationId, branchCode },
+        include: { organization: true },
+      });
+      console.log("Office created successfully:", result);
+      return result;
+    } catch (error) {
+      console.error("Error creating office:", error);
+      throw error;
+    }
   }
 
   // Add Bank Account
@@ -196,6 +208,7 @@ export class OrganizationService {
   // Get Offices
   async getOffices(organizationId: string) {
     try {
+      console.log('[OrganizationService] Getting offices for organization:', organizationId);
       if (!organizationId) throw new NotFoundException('Organization ID missing');
 
       const organization = await this.prisma.organization.findUnique({ where: { id: organizationId } });

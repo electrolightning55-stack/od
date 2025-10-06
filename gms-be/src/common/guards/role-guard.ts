@@ -19,7 +19,20 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Missing userId or roleName in token');
     }
 
+    // Allow organizationAdmin to access if they match organization context
+    if (user.roleName === 'organizationAdmin') {
+      const organizationId = context.switchToHttp().getRequest().organizationId;
+      if (!organizationId) {
+        console.error('[RolesGuard] Missing organizationId in request for organizationAdmin');
+        throw new ForbiddenException('Organization context missing');
+      }
+      console.log('[RolesGuard] Allowing organizationAdmin access for organization:', organizationId);
+      return true;
+    }
+
+    // For other roles, check exact match
     if (!requiredRoles.includes(user.roleName)) {
+      console.error('[RolesGuard] Access denied. User role:', user.roleName, 'Required roles:', requiredRoles);
       throw new ForbiddenException(
         `Access denied. Required roles: ${requiredRoles.join(', ')}`,
       );
